@@ -343,11 +343,27 @@ namespace graphene { namespace chain {
          void initialize_indexes();
          void init_genesis(const genesis_state_type& genesis_state = genesis_state_type());
 
+         /**
+          * @brief Register a new evaluator to the evaluator chain for its operation type
+          * @tparam EvaluatorType An evaluator type which will be used to evaluate its declared operation type
+          *
+          * This method registers a new evaluator type with tthe database. The evaluator specifies an operation type
+          * which it should be used to evaluate. The evaluator will be instantiated each time an operaton of the
+          * appropriate type is processed and used to evaluate the operation.
+          *
+          * This method may be called more than once with multiple evaluator types for a given operation type. When
+          * multiple evaluator types are registered for a given operation type, they will all execute in the order of
+          * registration; however, only the return value of the first registered evaluator will be returned; return
+          * values of subsequently registered evaluators will be silently dropped.
+          */
          template<typename EvaluatorType>
          void register_evaluator()
          {
-            _operation_evaluators[
-               operation::tag<typename EvaluatorType::operation_type>::value].reset( new op_evaluator_impl<EvaluatorType>() );
+            auto& eval_ptr = _operation_evaluators[operation::tag<typename EvaluatorType::operation_type>::value];
+            if (eval_ptr == nullptr)
+                eval_ptr = std::make_unique<op_evaluator_impl<EvaluatorType>>();
+            else
+                eval_ptr->append_evaluator(std::make_unique<op_evaluator_impl<EvaluatorType>>());
          }
 
          //////////////////// db_balance.cpp ////////////////////

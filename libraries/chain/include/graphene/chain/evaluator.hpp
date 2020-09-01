@@ -124,17 +124,28 @@ namespace graphene { namespace chain {
    {
    public:
       virtual ~op_evaluator(){}
+      virtual void append_evaluator(unique_ptr<op_evaluator> next_evaluator) = 0;
       virtual operation_result evaluate(transaction_evaluation_state& eval_state, const operation& op, bool apply) = 0;
    };
 
    template<typename T>
    class op_evaluator_impl : public op_evaluator
    {
+       unique_ptr<op_evaluator> next_evaluator;
    public:
+      virtual void append_evaluator(unique_ptr<op_evaluator> next_evaluator) override {
+         if (this->next_evaluator == nullptr)
+             this->next_evaluator = std::move(next_evaluator);
+         else
+             this->next_evaluator->append_evaluator(std::move(next_evaluator));
+      }
       virtual operation_result evaluate(transaction_evaluation_state& eval_state, const operation& op, bool apply = true) override
       {
          T eval;
-         return eval.start_evaluate(eval_state, op, apply);
+         auto result = eval.start_evaluate(eval_state, op, apply);
+         if (next_evaluator != nullptr)
+             next_evaluator->evaluate(eval_state, op, apply);
+         return result;
       }
    };
 
