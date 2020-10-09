@@ -63,20 +63,26 @@
 #include <fc/thread/mutex.hpp>
 #include <fc/thread/scoped_lock.hpp>
 #include <fc/crypto/rand.hpp>
+#include <fc/rpc/api_connection.hpp>
+#include <fc/crypto/base58.hpp>
+#include <fc/popcount.hpp>
 
 #include <graphene/app/api.hpp>
 #include <graphene/chain/asset_object.hpp>
+#include <graphene/chain/hardfork.hpp>
 
 #include <graphene/chain/tournament_object.hpp>
 #include <graphene/chain/match_object.hpp>
 #include <graphene/chain/game_object.hpp>
-#include <graphene/chain/protocol/rock_paper_scissors.hpp>
+#include <graphene/protocol/rock_paper_scissors.hpp>
 #include <graphene/chain/rock_paper_scissors.hpp>
 
 #include <graphene/bookie/bookie_api.hpp>
-#include <graphene/chain/sidechain_defs.hpp>
 
-#include <graphene/chain/protocol/fee_schedule.hpp>
+#include <graphene/protocol/sidechain_defs.hpp>
+#include <graphene/protocol/fee_schedule.hpp>
+#include <graphene/protocol/pts_address.hpp>
+#include <graphene/chain/hardfork.hpp>
 #include <graphene/utilities/git_revision.hpp>
 #include <graphene/utilities/key_conversion.hpp>
 #include <graphene/utilities/words.hpp>
@@ -165,7 +171,7 @@ optional<T> maybe_id( const string& name_or_id )
 
 string address_to_shorthash( const address& addr )
 {
-   uint32_t x = addr.addr._hash[0];
+   uint32_t x = addr.addr._hash[0].value();
    static const char hd[] = "0123456789abcdef";
    string result;
 
@@ -369,7 +375,7 @@ private:
    // return true if any of my_accounts are players in this tournament
    bool tournament_is_relevant_to_my_accounts(const tournament_object& tournament_obj)
    {
-      tournament_details_object tournament_details = get_object<tournament_details_object>(tournament_obj.tournament_details_id);
+      tournament_details_object tournament_details = get_object(tournament_obj.tournament_details_id);
       for (const account_object& account_obj : _wallet.my_accounts)
          if (tournament_details.registered_players.find(account_obj.id) != tournament_details.registered_players.end())
             return true;
@@ -654,11 +660,11 @@ public:
       return _checksum == fc::sha512();
    }
 
-   template<typename T>
-   T get_object(object_id<T::space_id, T::type_id, T> id)const
+   template<typename ID>
+   graphene::db::object_downcast_t<ID> get_object(ID id)const
    {
       auto ob = _remote_db->get_objects({id}).front();
-      return ob.template as<T>( GRAPHENE_MAX_NESTED_OBJECTS );
+      return ob.template as<graphene::db::object_downcast_t<ID>>( GRAPHENE_MAX_NESTED_OBJECTS );
    }
 
    void set_operation_fees( signed_transaction& tx, std::shared_ptr<fee_schedule> s  )
@@ -680,7 +686,9 @@ public:
                                                                           " old");
       result["next_maintenance_time"] = fc::get_approximate_relative_time_string(dynamic_props.next_maintenance_time);
       result["chain_id"] = chain_props.chain_id;
-      result["participation"] = (100*dynamic_props.recent_slots_filled.popcount()) / 128.0;
+      stringstream participation;
+      participation << fixed << std::setprecision(2) << (100.0*fc::popcount(dynamic_props.recent_slots_filled)) / 128.0;
+      result["participation"] = participation.str();
       result["active_witnesses"] = fc::variant(global_props.active_witnesses, GRAPHENE_MAX_NESTED_OBJECTS);
       result["active_committee_members"] = fc::variant(global_props.active_committee_members, GRAPHENE_MAX_NESTED_OBJECTS);
       result["active_sons"] = fc::variant(global_props.active_sons, GRAPHENE_MAX_NESTED_OBJECTS);
@@ -962,7 +970,7 @@ public:
                     ("match", match_obj.id)("account", get_account(account_id).name));
                for (const game_id_type& game_id : match_obj.games)
                {
-                  game_object game_obj = get_object<game_object>(game_id);
+                  game_object game_obj = get_object(game_id);
                   auto insert_result = game_cache.insert(game_obj);
                   if (insert_result.second)
                      game_in_new_state(game_obj);
@@ -976,10 +984,10 @@ public:
    // updates on those matches
    void monitor_matches_in_tournament(const tournament_object& tournament_obj)
    { try {
-      tournament_details_object tournament_details = get_object<tournament_details_object>(tournament_obj.tournament_details_id);
+      tournament_details_object tournament_details = get_object(tournament_obj.tournament_details_id);
       for (const match_id_type& match_id : tournament_details.matches)
       {
-         match_object match_obj = get_object<match_object>(match_id);
+         match_object match_obj = get_object(match_id);
          auto insert_result = match_cache.insert(match_obj);
          if (insert_result.second)
             match_in_new_state(match_obj);
@@ -1001,7 +1009,7 @@ public:
          {
             try
             {
-               tournament_object tournament = get_object<tournament_object>(tournament_id);
+               tournament_object tournament = get_object(tournament_id);
                auto insert_result = tournament_cache.insert(tournament);
                if (insert_result.second)
                {
@@ -1186,7 +1194,7 @@ public:
             total_fee += gprops.current_fees->set_fee( op, fee_asset_obj.options.core_exchange_rate );
 
          FC_ASSERT((total_fee * fee_asset_obj.options.core_exchange_rate).amount <=
-                   get_object<asset_dynamic_data_object>(fee_asset_obj.dynamic_asset_data_id).fee_pool,
+                   get_object(fee_asset_obj.dynamic_asset_data_id).fee_pool,
                    "Cannot pay fees in ${asset}, as this asset's fee pool is insufficiently funded.",
                    ("asset", fee_asset_obj.symbol));
       } else {
@@ -2335,7 +2343,7 @@ public:
 
       if( vbid )
       {
-         result.emplace_back( get_object<vesting_balance_object>(*vbid), now );
+         result.emplace_back( get_object(*vbid), now );
          return result;
       }
 
@@ -2370,7 +2378,7 @@ public:
             FC_THROW("Account ${account} has no core Token ${TOKEN} vested and thus its not allowed to withdraw.", ("account", witness_name)("TOKEN", GRAPHENE_SYMBOL));
       }
 
-      vesting_balance_object vbo = get_object< vesting_balance_object >( *vbid );
+      vesting_balance_object vbo = get_object( *vbid );
 
       if(vbo.balance_type == vesting_balance_type::gpos)
          FC_THROW("Allowed to withdraw only Normal and Son type vest balances with this method");
@@ -2415,7 +2423,7 @@ public:
 
       //whether it is a witness or user, keep it in a container and iterate over to process all vesting balances and types 
       if(!vbos.size())
-         vbos.emplace_back( get_object<vesting_balance_object>(*vbid) );
+         vbos.emplace_back( get_object(*vbid) );
  
       for (const vesting_balance_object& vesting_balance_obj: vbos) {
          if(vesting_balance_obj.balance_type == vesting_balance_type::gpos)
@@ -2943,14 +2951,13 @@ public:
       return sign_transaction(trx, broadcast);
    }
 
-   signed_transaction cancel_order(object_id_type order_id, bool broadcast = false)
+   signed_transaction cancel_order(limit_order_id_type order_id, bool broadcast = false)
    { try {
          FC_ASSERT(!is_locked());
-         FC_ASSERT(order_id.space() == protocol_ids, "Invalid order ID ${id}", ("id", order_id));
          signed_transaction trx;
 
          limit_order_cancel_operation op;
-         op.fee_paying_account = get_object<limit_order_object>(order_id).seller;
+         op.fee_paying_account = get_object(order_id).seller;
          op.order = order_id;
          trx.operations = {op};
          set_operation_fees( trx, _remote_db->get_global_properties().parameters.current_fees);
@@ -3266,7 +3273,7 @@ public:
                      std::string player_name;
                      if (round == num_rounds)
                      {
-                        match_object match = get_object<match_object>(tournament_details.matches[num_matches - 1]);
+                        match_object match = get_object(tournament_details.matches[num_matches - 1]);
                         if (match.get_state() == match_state::match_complete && 
                             !match.match_winners.empty())
                         {
@@ -3276,7 +3283,7 @@ public:
                      }
                      else
                      {
-                        match_object match = get_object<match_object>(tournament_details.matches[match_number]);
+                        match_object match = get_object(tournament_details.matches[match_number]);
                         if (!match.players.empty())
                         {
                            if (player_in_match < match.players.size())
@@ -3314,7 +3321,7 @@ public:
 
          return ss.str();
       };
-      m["get_order_book"] = [this](variant result, const fc::variants& a)
+      m["get_order_book"] = [](variant result, const fc::variants&)
       {
          auto orders = result.as<order_book>( GRAPHENE_MAX_NESTED_OBJECTS );
          auto bids = orders.bids;
@@ -4467,7 +4474,7 @@ asset_bitasset_data_object wallet_api::get_bitasset_data(string asset_name_or_id
 {
    auto asset = get_asset(asset_name_or_id);
    FC_ASSERT(asset.is_market_issued() && asset.bitasset_data_id);
-   return my->get_object<asset_bitasset_data_object>(*asset.bitasset_data_id);
+   return my->get_object(*asset.bitasset_data_id);
 }
 
 account_id_type wallet_api::get_account_id(string account_name_or_id) const
@@ -5270,7 +5277,7 @@ string wallet_api::help()const
 {
    std::vector<std::string> method_names = my->method_documentation.get_method_names();
    std::stringstream ss;
-   for (const std::string method_name : method_names)
+   for (const std::string& method_name : method_names)
    {
       try
       {
@@ -5883,7 +5890,7 @@ blind_confirmation wallet_api::blind_transfer_help( string from_key_or_label,
       conf_output.decrypted_memo.amount = change;
       conf_output.decrypted_memo.blinding_factor = change_blind_factor;
       conf_output.decrypted_memo.commitment = change_out.commitment;
-      conf_output.decrypted_memo.check   = from_secret._hash[0];
+      conf_output.decrypted_memo.check   = from_secret._hash[0].value();
       conf_output.confirmation.one_time_key = one_time_key.get_public_key();
       conf_output.confirmation.to = from_key;
       conf_output.confirmation.encrypted_memo = fc::aes_encrypt( from_secret, fc::raw::pack( conf_output.decrypted_memo ) );
@@ -5901,7 +5908,7 @@ blind_confirmation wallet_api::blind_transfer_help( string from_key_or_label,
    conf_output.decrypted_memo.amount = amount;
    conf_output.decrypted_memo.blinding_factor = blind_factor;
    conf_output.decrypted_memo.commitment = to_out.commitment;
-   conf_output.decrypted_memo.check   = secret._hash[0];
+   conf_output.decrypted_memo.check   = secret._hash[0].value();
    conf_output.confirmation.one_time_key = one_time_key.get_public_key();
    conf_output.confirmation.to = to_key;
    conf_output.confirmation.encrypted_memo = fc::aes_encrypt( secret, fc::raw::pack( conf_output.decrypted_memo ) );
@@ -5989,7 +5996,7 @@ blind_confirmation wallet_api::transfer_to_blind( string from_account_id_or_name
       conf_output.decrypted_memo.amount = amount;
       conf_output.decrypted_memo.blinding_factor = blind_factor;
       conf_output.decrypted_memo.commitment = out.commitment;
-      conf_output.decrypted_memo.check   = secret._hash[0];
+      conf_output.decrypted_memo.check   = secret._hash[0].value();
       conf_output.confirmation.one_time_key = one_time_key.get_public_key();
       conf_output.confirmation.to = to_key;
       conf_output.confirmation.encrypted_memo = fc::aes_encrypt( secret, fc::raw::pack( conf_output.decrypted_memo ) );
@@ -6793,9 +6800,9 @@ signed_transaction wallet_api::rps_throw(game_id_type game_id,
    FC_ASSERT( !is_locked() );
 
    // check whether the gesture is appropriate for the game we're playing
-   graphene::chain::game_object game_obj = my->get_object<graphene::chain::game_object>(game_id);
-   graphene::chain::match_object match_obj = my->get_object<graphene::chain::match_object>(game_obj.match_id);
-   graphene::chain::tournament_object tournament_obj = my->get_object<graphene::chain::tournament_object>(match_obj.tournament_id);
+   graphene::chain::game_object game_obj = my->get_object(game_id);
+   graphene::chain::match_object match_obj = my->get_object(game_obj.match_id);
+   graphene::chain::tournament_object tournament_obj = my->get_object(match_obj.tournament_id);
    graphene::chain::rock_paper_scissors_game_options game_options = 
       tournament_obj.options.game_options.get<graphene::chain::rock_paper_scissors_game_options>();
    if ((int)gesture >= game_options.number_of_gestures)

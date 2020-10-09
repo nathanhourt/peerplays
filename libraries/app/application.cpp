@@ -26,8 +26,10 @@
 #include <graphene/app/application.hpp>
 #include <graphene/app/plugin.hpp>
 
-#include <graphene/chain/protocol/fee_schedule.hpp>
-#include <graphene/chain/protocol/types.hpp>
+#include <graphene/chain/db_with.hpp>
+#include <graphene/chain/genesis_state.hpp>
+#include <graphene/protocol/fee_schedule.hpp>
+#include <graphene/protocol/types.hpp>
 
 #include <graphene/egenesis/egenesis.hpp>
 
@@ -378,7 +380,6 @@ namespace detail {
             _chain_db->enable_standby_votes_tracking( _options->at("enable-standby-votes-tracking").as<bool>() );
          }
          
-         bool replay = false;
          std::string replay_reason = "reason not provided";
 
          if( _options->count("replay-blockchain") )
@@ -552,7 +553,7 @@ namespace detail {
          _chain_db->push_transaction( transaction_message.trx );
       } FC_CAPTURE_AND_RETHROW( (transaction_message) ) }
 
-      virtual void handle_message(const message& message_to_process) override
+      virtual void handle_message(const message&) override
       {
          // not a transaction, not a block
          FC_THROW( "Invalid Message Type" );

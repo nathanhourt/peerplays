@@ -26,8 +26,10 @@
 #include <graphene/chain/get_config.hpp>
 #include <graphene/chain/tournament_object.hpp>
 #include <graphene/chain/account_object.hpp>
-#include <graphene/chain/protocol/address.hpp>
-#include <graphene/chain/pts_address.hpp>
+#include <graphene/chain/hardfork.hpp>
+
+#include <graphene/protocol/address.hpp>
+#include <graphene/protocol/pts_address.hpp>
 
 #include <fc/bloom_filter.hpp>
 
@@ -37,7 +39,6 @@
 
 #include <boost/range/iterator_range.hpp>
 #include <boost/rational.hpp>
-#include <boost/multiprecision/cpp_int.hpp>
 
 #include <cctype>
 
@@ -2594,10 +2595,9 @@ graphene::app::gpos_info database_api_impl::get_gpos_info(const account_id_type 
 #endif
 
    vector<vesting_balance_object> account_vbos;
-   const time_point_sec now = _db.head_block_time();
    auto vesting_range = _db.get_index_type<vesting_balance_index>().indices().get<by_account>().equal_range(account);
    std::for_each(vesting_range.first, vesting_range.second,
-                  [&account_vbos, now](const vesting_balance_object& balance) {
+                  [&account_vbos](const vesting_balance_object& balance) {
                      if(balance.balance.amount > 0 && balance.balance_type == vesting_balance_type::gpos
                         && balance.balance.asset_id == asset_id_type())
                         account_vbos.emplace_back(balance);

@@ -1,8 +1,9 @@
 #pragma once
+#include <graphene/protocol/types.hpp>
+#include <graphene/protocol/sidechain_defs.hpp>
+#include <graphene/protocol/son_info.hpp>
+
 #include <boost/multi_index/composite_key.hpp>
-#include <graphene/chain/protocol/types.hpp>
-#include <graphene/chain/sidechain_defs.hpp>
-#include <graphene/chain/son_info.hpp>
 
 namespace graphene { namespace chain {
    using namespace graphene::db;
@@ -68,6 +69,8 @@ FC_REFLECT_ENUM( graphene::chain::sidechain_transaction_status,
                  (complete)
                  (sent)
                  (settled) )
+
+MAP_OBJECT_ID_TO_TYPE(graphene::chain::sidechain_transaction_object)
 
 FC_REFLECT_DERIVED( graphene::chain::sidechain_transaction_object, (graphene::db::object ),
                     (sidechain)

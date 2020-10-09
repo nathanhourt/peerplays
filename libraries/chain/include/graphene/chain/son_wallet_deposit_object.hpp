@@ -1,7 +1,7 @@
 #pragma once
-#include <graphene/chain/protocol/asset.hpp>
-#include <graphene/chain/protocol/types.hpp>
-#include <graphene/chain/sidechain_defs.hpp>
+#include <graphene/protocol/asset.hpp>
+#include <graphene/protocol/types.hpp>
+#include <graphene/protocol/sidechain_defs.hpp>
 
 namespace graphene { namespace chain {
    using namespace graphene::db;
@@ -60,6 +60,8 @@ namespace graphene { namespace chain {
    >;
    using son_wallet_deposit_index = generic_index<son_wallet_deposit_object, son_wallet_deposit_multi_index_type>;
 } } // graphene::chain
+
+MAP_OBJECT_ID_TO_TYPE(graphene::chain::son_wallet_deposit_object)
 
 FC_REFLECT_DERIVED( graphene::chain::son_wallet_deposit_object, (graphene::db::object),
                     (timestamp) (block_num) (sidechain)

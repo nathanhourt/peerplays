@@ -12,9 +12,8 @@ add_library( graphene_app
            )
 
 # need to link graphene_debug_witness because plugins aren't sufficiently isolated #246
-#target_link_libraries( graphene_app graphene_market_history graphene_account_history graphene_chain fc graphene_db graphene_net graphene_utilities graphene_debug_witness )
 target_link_libraries( graphene_app
-                       PUBLIC graphene_net graphene_utilities
+                       PUBLIC graphene_chain graphene_net graphene_utilities
                        graphene_account_history graphene_accounts_list graphene_affiliate_stats graphene_bookie graphene_debug_witness graphene_elasticsearch graphene_es_objects graphene_generate_genesis graphene_market_history )
 
 target_include_directories( graphene_app
@@ -43,7 +42,7 @@ add_library( graphene_plugin
            )
 
 target_link_libraries( graphene_plugin
-                       PUBLIC graphene_net graphene_utilities )
+                       PUBLIC graphene_chain graphene_net graphene_utilities )
 
 target_include_directories( graphene_plugin
                             PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )

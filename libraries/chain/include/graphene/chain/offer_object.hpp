@@ -1,5 +1,9 @@
 #pragma once
-#include <graphene/chain/protocol/operations.hpp>
+
+#include <graphene/chain/types.hpp>
+
+#include <graphene/protocol/operations.hpp>
+
 #include <graphene/db/generic_index.hpp>
 
 namespace graphene
@@ -98,6 +102,9 @@ namespace graphene
 
     } // namespace chain
 } // namespace graphene
+
+MAP_OBJECT_ID_TO_TYPE(graphene::chain::offer_object)
+MAP_OBJECT_ID_TO_TYPE(graphene::chain::offer_history_object)
 
 FC_REFLECT_DERIVED(graphene::chain::offer_object, (graphene::db::object),
                    (issuer)(item_ids)(bidder)(bid_price)(minimum_price)(

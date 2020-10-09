@@ -273,7 +273,6 @@ BOOST_FIXTURE_TEST_CASE( whitelist_must_not_be_longer_than, database_fixture )
             BOOST_CHECK(nathan.is_lifetime_member());
 
             asset buy_in = asset(10000);
-            db.get_global_properties().parameters.maximum_tournament_whitelist_length;
             flat_set<account_id_type> whitelist;
             for(uint16_t i = 0; i < db.get_global_properties().parameters.maximum_tournament_whitelist_length+1; ++i)
             {
@@ -1611,7 +1610,7 @@ BOOST_FIXTURE_TEST_CASE( simple, database_fixture )
                         const account_object winner = winner_id(db);
                         BOOST_TEST_MESSAGE( "The winner is " + winner.name );
 
-                        share_type rake_amount = (fc::uint128_t(tournament.prize_pool.value) * rake_fee_percentage / GRAPHENE_1_PERCENT / 100).to_uint64();
+                        share_type rake_amount = (fc::uint128_t(tournament.prize_pool.value) * rake_fee_percentage / GRAPHENE_1_PERCENT / 100);
                         optional<account_id_type> dividend_account = tournament_helper.get_asset_dividend_account(tournament.options.buy_in.asset_id);
                         if (dividend_account.valid())
                             players_balances[*dividend_account][tournament.options.buy_in.asset_id] += rake_amount;
@@ -1728,7 +1727,7 @@ BOOST_FIXTURE_TEST_CASE( ties, database_fixture )
                         assert(final_match.match_winners.size() == 1);
                         const account_id_type& winner_id = *final_match.match_winners.begin();
                         BOOST_TEST_MESSAGE( "The winner of " + std::string(object_id_type(tournament_id))  + " is " + winner_id(db).name + " " +  std::string(object_id_type(winner_id)));
-                        share_type rake_amount = (fc::uint128_t(tournament.prize_pool.value) * rake_fee_percentage / GRAPHENE_1_PERCENT / 100).to_uint64();
+                        share_type rake_amount = (fc::uint128_t(tournament.prize_pool.value) * rake_fee_percentage / GRAPHENE_1_PERCENT / 100);
                         optional<account_id_type> dividend_account = tournament_helper.get_asset_dividend_account(tournament.options.buy_in.asset_id);
                         if (dividend_account.valid())
                             players_balances[*dividend_account][tournament.options.buy_in.asset_id] += rake_amount;                    players_balances[winner_id][tournament.options.buy_in.asset_id] += tournament.prize_pool - rake_amount;
@@ -1940,7 +1939,7 @@ BOOST_FIXTURE_TEST_CASE( assets, database_fixture )
                     assert(final_match.match_winners.size() == 1);
                     const account_id_type& winner_id = *final_match.match_winners.begin();
                     BOOST_TEST_MESSAGE( "The winner of " + std::string(object_id_type(tournament_id))  + " is " + winner_id(db).name + " " +  std::string(object_id_type(winner_id)));
-                    share_type rake_amount = (fc::uint128_t(tournament.prize_pool.value) * rake_fee_percentage / GRAPHENE_1_PERCENT / 100).to_uint64();
+                    share_type rake_amount = (fc::uint128_t(tournament.prize_pool.value) * rake_fee_percentage / GRAPHENE_1_PERCENT / 100);
                     optional<account_id_type> dividend_account = tournament_helper.get_asset_dividend_account(tournament.options.buy_in.asset_id);
                     if (dividend_account.valid())
                         players_balances[*dividend_account][tournament.options.buy_in.asset_id] += rake_amount;                    players_balances[winner_id][tournament.options.buy_in.asset_id] += tournament.prize_pool - rake_amount;
@@ -2076,7 +2075,7 @@ BOOST_FIXTURE_TEST_CASE( basic, database_fixture )
                     assert(final_match.match_winners.size() == 1);
                     const account_id_type& winner_id = *final_match.match_winners.begin();
                     BOOST_TEST_MESSAGE( "The winner of " + std::string(object_id_type(tournament_id))  + " is " + winner_id(db).name + " " +  std::string(object_id_type(winner_id)));
-                    share_type rake_amount = (fc::uint128_t(tournament.prize_pool.value) * rake_fee_percentage / GRAPHENE_1_PERCENT / 100).to_uint64();
+                    share_type rake_amount = (fc::uint128_t(tournament.prize_pool.value) * rake_fee_percentage / GRAPHENE_1_PERCENT / 100);
                     optional<account_id_type> dividend_account = tournament_helper.get_asset_dividend_account(tournament.options.buy_in.asset_id);
                     if (dividend_account.valid())
                         players_initial_balances[*dividend_account][tournament.options.buy_in.asset_id] += rake_amount;
@@ -2214,7 +2213,7 @@ BOOST_FIXTURE_TEST_CASE( massive, database_fixture )
                     assert(final_match.match_winners.size() == 1);
                     const account_id_type& winner_id = *final_match.match_winners.begin();
                     BOOST_TEST_MESSAGE( "The winner of " + std::string(object_id_type(tournament_id))  + " is " + winner_id(db).name + " " +  std::string(object_id_type(winner_id)));
-                    share_type rake_amount = (fc::uint128_t(tournament.prize_pool.value) * rake_fee_percentage / GRAPHENE_1_PERCENT / 100).to_uint64();
+                    share_type rake_amount = (fc::uint128_t(tournament.prize_pool.value) * rake_fee_percentage / GRAPHENE_1_PERCENT / 100);
                     optional<account_id_type> dividend_account = tournament_helper.get_asset_dividend_account(tournament.options.buy_in.asset_id);
                     if (dividend_account.valid())
                         players_balances[*dividend_account][tournament.options.buy_in.asset_id] += rake_amount;

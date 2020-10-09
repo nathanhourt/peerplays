@@ -25,7 +25,6 @@
 
 #include <fc/io/raw.hpp>
 #include <fc/container/flat.hpp>
-#include <fc/uint128.hpp>
 
 namespace graphene { namespace db {
 

@@ -52,7 +52,7 @@ class persistent_event_object : public graphene::db::abstract_object<persistent_
       event_id_type get_event_id() const { return ephemeral_event_object.id; }
 };
 
-typedef object_id<bookie_objects, persistent_event_object_type, persistent_event_object> persistent_event_id_type;
+typedef object_id<bookie_objects, persistent_event_object_type> persistent_event_id_type;
 
 struct by_event_id;
 typedef multi_index_container<

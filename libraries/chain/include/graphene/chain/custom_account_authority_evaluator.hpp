@@ -1,6 +1,7 @@
 #pragma once
 #include <graphene/chain/evaluator.hpp>
-#include <graphene/chain/protocol/custom_account_authority.hpp>
+
+#include <graphene/protocol/custom_account_authority.hpp>
 
 namespace graphene
 {

@@ -1,6 +1,8 @@
 #pragma once
+
 #include <graphene/chain/evaluator.hpp>
-#include <graphene/chain/protocol/custom_permission.hpp>
+
+#include <graphene/protocol/custom_permission.hpp>
 
 namespace graphene
 {

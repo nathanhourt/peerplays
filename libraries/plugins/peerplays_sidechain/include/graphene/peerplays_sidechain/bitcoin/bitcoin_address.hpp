@@ -3,7 +3,7 @@
 #include <graphene/peerplays_sidechain/bitcoin/types.hpp>
 #include <graphene/peerplays_sidechain/bitcoin/utils.hpp>
 
-using namespace graphene::chain;
+using namespace graphene::protocol;
 
 namespace graphene { namespace peerplays_sidechain { namespace bitcoin {
 
@@ -217,6 +217,7 @@ public:
 private:
    void create_redeem_script(const fc::ecc::public_key &user_key_data, const std::vector<std::pair<fc::ecc::public_key, uint16_t>> &keys_data);
 
+public:
    uint32_t latency_;
 };
 

@@ -1,5 +1,9 @@
 #pragma once
-#include <graphene/chain/protocol/types.hpp>
+
+#include <graphene/chain/types.hpp>
+
+#include <graphene/protocol/authority.hpp>
+
 #include <graphene/db/object.hpp>
 #include <graphene/db/generic_index.hpp>
 
@@ -25,7 +29,6 @@ namespace graphene { namespace chain {
          authority auth;
    };
 
-   struct by_id;
    struct by_account_and_permission;
    using custom_permission_multi_index_type = multi_index_container<
       custom_permission_object,
@@ -44,6 +47,8 @@ namespace graphene { namespace chain {
    using custom_permission_index = generic_index<custom_permission_object, custom_permission_multi_index_type>;
 
 } } // graphene::chain
+
+MAP_OBJECT_ID_TO_TYPE(graphene::chain::custom_permission_object)
 
 FC_REFLECT_DERIVED( graphene::chain::custom_permission_object, (graphene::db::object),
                     (account)(permission_name)(auth) )

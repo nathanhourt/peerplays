@@ -29,7 +29,7 @@
 #include <graphene/chain/exceptions.hpp>
 #include <graphene/chain/hardfork.hpp>
 #include <graphene/chain/internal_exceptions.hpp>
-#include <graphene/chain/special_authority.hpp>
+#include <graphene/chain/special_authority_evaluation.hpp>
 #include <graphene/chain/special_authority_object.hpp>
 #include <graphene/chain/worker_object.hpp>
 
@@ -214,7 +214,7 @@ object_id_type account_create_evaluator::do_apply( const account_create_operatio
    if( dynamic_properties.accounts_registered_this_interval % global_properties.parameters.accounts_per_fee_scale == 0
          && global_properties.parameters.account_fee_scale_bitshifts != 0 )
    {
-      d.modify(global_properties, [&dynamic_properties](global_property_object& p) {
+      d.modify(global_properties, [](global_property_object& p) {
          p.parameters.current_fees->get<account_create_operation>().basic_fee <<= p.parameters.account_fee_scale_bitshifts;
       });
    }

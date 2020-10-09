@@ -1,5 +1,7 @@
 #pragma once
 
+#include <graphene/chain/son_wallet_object.hpp>
+
 #include <graphene/peerplays_sidechain/bitcoin/bitcoin_address.hpp>
 #include <graphene/peerplays_sidechain/sidechain_net_handler.hpp>
 

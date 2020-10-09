@@ -22,11 +22,15 @@
  * THE SOFTWARE.
  */
 #pragma once
-#include <graphene/chain/protocol/operations.hpp>
+#include <graphene/chain/types.hpp>
 
-namespace graphene { namespace chain {
+#include <graphene/protocol/operations.hpp>
+
+namespace graphene {
+namespace protocol { struct signed_transaction; }
+namespace chain {
    class database;
-   struct signed_transaction;
+   using protocol::signed_transaction;
 
    /**
     *  Place holder for state tracked while processing a transaction. This class provides helper methods that are

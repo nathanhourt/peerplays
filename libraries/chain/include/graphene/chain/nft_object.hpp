@@ -1,5 +1,7 @@
 #pragma once
-#include <graphene/chain/protocol/types.hpp>
+
+#include <graphene/chain/types.hpp>
+
 #include <graphene/db/object.hpp>
 #include <graphene/db/generic_index.hpp>
 
@@ -10,7 +12,7 @@ namespace graphene { namespace chain {
    {
       public:
          static const uint8_t space_id = protocol_ids;
-         static const uint8_t type_id  = nft_metadata_type;
+         static const uint8_t type_id  = nft_metadata_object_type;
 
          account_id_type owner;
          std::string     name;
@@ -87,6 +89,9 @@ namespace graphene { namespace chain {
    using nft_index = generic_index<nft_object, nft_multi_index_type>;
 
 } } // graphene::chain
+
+MAP_OBJECT_ID_TO_TYPE(graphene::chain::nft_metadata_object)
+MAP_OBJECT_ID_TO_TYPE(graphene::chain::nft_object)
 
 FC_REFLECT_DERIVED( graphene::chain::nft_metadata_object, (graphene::db::object),
                     (owner)

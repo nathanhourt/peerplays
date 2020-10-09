@@ -21,7 +21,7 @@ object_id_type create_son_evaluator::do_apply(const son_create_operation& op)
 { try {
     vote_id_type vote_id;
     db().modify(db().get_global_properties(), [&vote_id](global_property_object& p) {
-        vote_id = get_next_vote_id(p, vote_id_type::son);
+        vote_id = vote_id_type(vote_id_type::son, p.next_available_vote_id++);
     });
 
     const auto& new_son_object = db().create<son_object>( [&]( son_object& obj ){

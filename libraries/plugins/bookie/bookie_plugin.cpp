@@ -64,6 +64,8 @@ class persistent_bet_object_helper : public secondary_index
    public:
       virtual ~persistent_bet_object_helper() {}
 
+      using watched_index = primary_index<bet_object_index>;
+
       virtual void object_inserted(const object& obj) override;
       //virtual void object_removed( const object& obj ) override;
       //virtual void about_to_modify( const object& before ) override;
@@ -98,6 +100,8 @@ class persistent_betting_market_object_helper : public secondary_index
 {
    public:
       virtual ~persistent_betting_market_object_helper() {}
+
+      using watched_index = primary_index<betting_market_object_index>;
 
       virtual void object_inserted(const object& obj) override;
       //virtual void object_removed( const object& obj ) override;
@@ -134,6 +138,8 @@ class persistent_betting_market_group_object_helper : public secondary_index
    public:
       virtual ~persistent_betting_market_group_object_helper() {}
 
+      using watched_index = primary_index<betting_market_group_object_index>;
+
       virtual void object_inserted(const object& obj) override;
       //virtual void object_removed( const object& obj ) override;
       //virtual void about_to_modify( const object& before ) override;
@@ -168,6 +174,8 @@ class persistent_event_object_helper : public secondary_index
 {
    public:
       virtual ~persistent_event_object_helper() {}
+
+      using watched_index = primary_index<event_object_index>;
 
       virtual void object_inserted(const object& obj) override;
       //virtual void object_removed( const object& obj ) override;
@@ -465,45 +473,31 @@ void bookie_plugin::plugin_set_program_options(boost::program_options::options_d
 
 void bookie_plugin::plugin_initialize(const boost::program_options::variables_map& options)
 {
-    ilog("bookie plugin: plugin_startup() begin");
+    ilog("bookie plugin: plugin_initialize() begin");
     database().force_slow_replays();
     database().applied_block.connect( [&]( const signed_block& b){ my->on_block_applied(b); } );
     database().changed_objects.connect([&](const vector<object_id_type>& changed_object_ids, const fc::flat_set<graphene::chain::account_id_type>& impacted_accounts){ my->on_objects_changed(changed_object_ids); });
     database().new_objects.connect([this](const vector<object_id_type>& ids, const flat_set<account_id_type>& impacted_accounts) { my->on_objects_new(ids); });
     database().removed_objects.connect([this](const vector<object_id_type>& ids, const vector<const object*>& objs, const flat_set<account_id_type>& impacted_accounts) { my->on_objects_removed(ids); });
 
-
     //auto event_index =
     database().add_index<primary_index<detail::persistent_event_index> >();
     database().add_index<primary_index<detail::persistent_betting_market_group_index> >();
     database().add_index<primary_index<detail::persistent_betting_market_index> >();
     database().add_index<primary_index<detail::persistent_bet_index> >();
-    const primary_index<bet_object_index>& bet_object_idx = database().get_index_type<primary_index<bet_object_index> >();
-    primary_index<bet_object_index>& nonconst_bet_object_idx = const_cast<primary_index<bet_object_index>&>(bet_object_idx);
-    detail::persistent_bet_object_helper* persistent_bet_object_helper_index = nonconst_bet_object_idx.add_secondary_index<detail::persistent_bet_object_helper>();
-    persistent_bet_object_helper_index->set_plugin_instance(this);
-
-    const primary_index<betting_market_object_index>& betting_market_object_idx = database().get_index_type<primary_index<betting_market_object_index> >();
-    primary_index<betting_market_object_index>& nonconst_betting_market_object_idx = const_cast<primary_index<betting_market_object_index>&>(betting_market_object_idx);
-    detail::persistent_betting_market_object_helper* persistent_betting_market_object_helper_index = nonconst_betting_market_object_idx.add_secondary_index<detail::persistent_betting_market_object_helper>();
-    persistent_betting_market_object_helper_index->set_plugin_instance(this);
-
-    const primary_index<betting_market_group_object_index>& betting_market_group_object_idx = database().get_index_type<primary_index<betting_market_group_object_index> >();
-    primary_index<betting_market_group_object_index>& nonconst_betting_market_group_object_idx = const_cast<primary_index<betting_market_group_object_index>&>(betting_market_group_object_idx);
-    detail::persistent_betting_market_group_object_helper* persistent_betting_market_group_object_helper_index = nonconst_betting_market_group_object_idx.add_secondary_index<detail::persistent_betting_market_group_object_helper>();
-    persistent_betting_market_group_object_helper_index->set_plugin_instance(this);
-
-    const primary_index<event_object_index>& event_object_idx = database().get_index_type<primary_index<event_object_index> >();
-    primary_index<event_object_index>& nonconst_event_object_idx = const_cast<primary_index<event_object_index>&>(event_object_idx);
-    detail::persistent_event_object_helper* persistent_event_object_helper_index = nonconst_event_object_idx.add_secondary_index<detail::persistent_event_object_helper>();
-    persistent_event_object_helper_index->set_plugin_instance(this);
-
-    ilog("bookie plugin: plugin_startup() end");
+    ilog("bookie plugin: plugin_initialize() end");
  }
 
 void bookie_plugin::plugin_startup()
 {
    ilog("bookie plugin: plugin_startup()");
+
+   // Register secondary indexes
+   database().add_secondary_index<detail::persistent_bet_object_helper>()->set_plugin_instance(this);
+   database().add_secondary_index<detail::persistent_betting_market_object_helper>()->set_plugin_instance(this);
+   database().add_secondary_index<detail::persistent_betting_market_group_object_helper>()->set_plugin_instance(this);
+   database().add_secondary_index<detail::persistent_event_object_helper>()->set_plugin_instance(this);
+
     my->fill_localized_event_strings();
 }
 
@@ -519,7 +513,8 @@ asset bookie_plugin::get_total_matched_bet_amount_for_betting_market_group(betti
 }
 std::vector<event_object> bookie_plugin::get_events_containing_sub_string(const std::string& sub_string, const std::string& language)
 {
-    ilog("bookie plugin: get_events_containing_sub_string(${sub_string}, ${language})", (sub_string)(language));
+    ilog("bookie plugin: get_events_containing_sub_string(${sub_string}, ${language})",
+         ("sub_string", sub_string)("language", language));
     return my->get_events_containing_sub_string(sub_string, language);
 }
 
