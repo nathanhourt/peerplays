@@ -10,6 +10,9 @@ set( CUSTOM_URL_SCHEME "gcs" )
 set( INSTALLER_APP_ID "68ad7005-8eee-49c9-95ce-9eed97e5b347" )
 set( CMAKE_CXX_STANDARD 14 )
 
+set( GRAPHENE_BUILD_DYNAMIC_LIBRARIES OFF CACHE BOOL
+     "Whether to build dynamic libraries instead of static. Applies only to chain, db, protocol, net, and utilities" )
+
 # http://stackoverflow.com/a/18369825
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.8)
@@ -154,7 +157,6 @@ if(ENABLE_COVERAGE_TESTING)
 endif()
 
 add_subdirectory( libraries )
-
 
 set(BUILD_PEERPLAYS_PROGRAMS TRUE CACHE BOOL "Build peerplays executables (witness node, cli wallet, etc)")
 add_subdirectory( programs )

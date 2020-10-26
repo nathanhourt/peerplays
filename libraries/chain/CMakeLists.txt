@@ -19,11 +19,16 @@ file(GLOB CPP_FILES "*.cpp")
 #   message( STATUS "Graphene database unity build enabled" )
 #endif( GRAPHENE_DISABLE_UNITY_BUILD )
 
-add_library( graphene_chain
-             ${CPP_FILES}
-             ${HEADERS}
-             "${CMAKE_CURRENT_BINARY_DIR}/include/graphene/chain/hardfork.hpp"
-           )
+set( GRAPHENE_CHAIN_FILES
+     ${CPP_FILES}
+     ${HEADERS}
+     "${CMAKE_CURRENT_BINARY_DIR}/include/graphene/chain/hardfork.hpp"
+   )
+if (NOT ${GRAPHENE_BUILD_DYNAMIC_LIBRARIES})
+    add_library( graphene_chain ${GRAPHENE_CHAIN_FILES} )
+else()
+    add_library( graphene_chain SHARED ${GRAPHENE_CHAIN_FILES} )
+endif()
 
 add_dependencies( graphene_chain build_hardfork_hpp )
 target_link_libraries( graphene_chain fc graphene_db graphene_protocol )

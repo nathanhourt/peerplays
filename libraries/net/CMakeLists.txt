@@ -9,7 +9,11 @@ set(SOURCES node.cpp
             message.cpp
             message_oriented_connection.cpp)
 
-add_library( graphene_net ${SOURCES} ${HEADERS} )
+if (NOT ${GRAPHENE_BUILD_DYNAMIC_LIBRARIES})
+    add_library( graphene_net ${SOURCES} ${HEADERS} )
+else()
+    add_library( graphene_net SHARED ${SOURCES} ${HEADERS} )
+endif()
 
 target_link_libraries( graphene_net PUBLIC fc graphene_db graphene_protocol )
 target_include_directories( graphene_net  PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )

@@ -42,7 +42,12 @@ list(APPEND SOURCES account.cpp
                     )
 
 
-add_library( graphene_protocol ${SOURCES} ${HEADERS} )
+if (NOT ${GRAPHENE_BUILD_DYNAMIC_LIBRARIES})
+    add_library( graphene_protocol ${SOURCES} ${HEADERS} )
+else()
+    add_library( graphene_protocol SHARED ${SOURCES} ${HEADERS} )
+endif()
+
 target_link_libraries( graphene_protocol fc )
 target_include_directories( graphene_protocol PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
 
