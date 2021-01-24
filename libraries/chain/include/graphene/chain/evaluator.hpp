@@ -122,29 +122,62 @@ namespace graphene { namespace chain {
 
    class op_evaluator
    {
+   protected:
+       unique_ptr<op_evaluator> next_evaluator;
    public:
+       class evaluator_handle {
+           // Move-only semantics, and only friends can construct
+           evaluator_handle(const op_evaluator* pointer, operation::tag_type type)
+               : pointer(pointer), operation_type(type) {}
+           evaluator_handle(const evaluator_handle&) = delete;
+           evaluator_handle& operator=(const evaluator_handle&) = delete;
+
+           friend class op_evaluator;
+           template<typename>
+           friend class op_evaluator_impl;
+
+           // Pointer to the handled evaluator
+           const op_evaluator* pointer;
+           // Tag of the handled evaluator
+           operation::tag_type operation_type;
+
+       public:
+           evaluator_handle(evaluator_handle&&) = default;
+           evaluator_handle& operator=(evaluator_handle&&) = default;
+
+           operation::tag_type get_operation_type() const { return operation_type; }
+       };
+
       virtual ~op_evaluator(){}
-      virtual void append_evaluator(unique_ptr<op_evaluator> next_evaluator) = 0;
+      virtual evaluator_handle append_evaluator(unique_ptr<op_evaluator> next_evaluator) = 0;
+      virtual void delete_evaluator(evaluator_handle&& handle) {
+         if (next_evaluator.get() == handle.pointer)
+             // Next evaluator in chain is the one to delete. Move its next pointer into ours, and unique_ptr will delete the one that's going away.
+             next_evaluator = std::move(next_evaluator->next_evaluator);
+         else
+             next_evaluator->delete_evaluator(std::move(handle));
+      }
       virtual operation_result evaluate(transaction_evaluation_state& eval_state, const operation& op, bool apply) = 0;
    };
 
    template<typename T>
    class op_evaluator_impl : public op_evaluator
    {
-       unique_ptr<op_evaluator> next_evaluator;
    public:
-      virtual void append_evaluator(unique_ptr<op_evaluator> next_evaluator) override {
-         if (this->next_evaluator == nullptr)
+      virtual evaluator_handle append_evaluator(unique_ptr<op_evaluator> next_evaluator) override {
+         if (this->next_evaluator == nullptr) {
              this->next_evaluator = std::move(next_evaluator);
-         else
-             this->next_evaluator->append_evaluator(std::move(next_evaluator));
+             return evaluator_handle(this->next_evaluator.get(), operation::tag<typename T::operation_type>::value);
+         } else {
+             return this->next_evaluator->append_evaluator(std::move(next_evaluator));
+         }
       }
       virtual operation_result evaluate(transaction_evaluation_state& eval_state, const operation& op, bool apply = true) override
       {
          T eval;
          auto result = eval.start_evaluate(eval_state, op, apply);
-         if (next_evaluator != nullptr)
-             next_evaluator->evaluate(eval_state, op, apply);
+         if (this->next_evaluator != nullptr)
+             this->next_evaluator->evaluate(eval_state, op, apply);
          return result;
       }
    };

@@ -346,6 +346,8 @@ namespace graphene { namespace chain {
          /**
           * @brief Register a new evaluator to the evaluator chain for its operation type
           * @tparam EvaluatorType An evaluator type which will be used to evaluate its declared operation type
+          * @return If registering an evaluator for an operation that already has an evaluator, returns a handle for
+          * the newly added evaluator which can be used to delete it later.
           *
           * This method registers a new evaluator type with tthe database. The evaluator specifies an operation type
           * which it should be used to evaluate. The evaluator will be instantiated each time an operaton of the
@@ -355,15 +357,39 @@ namespace graphene { namespace chain {
           * multiple evaluator types are registered for a given operation type, they will all execute in the order of
           * registration; however, only the return value of the first registered evaluator will be returned; return
           * values of subsequently registered evaluators will be silently dropped.
+          *
+          * The first evaluator registered for a given operation type is permanent, and is the only evaluator which
+          * can return a value. Subsequent (auxiliary) evaluators for that operation type can be deleted at runtime
+          * by calling @ref delete_evaluator() with the evaluator_handle obtained when registering the evaluator.
           */
          template<typename EvaluatorType>
-         void register_evaluator()
+         optional<op_evaluator::evaluator_handle> register_evaluator()
          {
             auto& eval_ptr = _operation_evaluators[operation::tag<typename EvaluatorType::operation_type>::value];
             if (eval_ptr == nullptr)
                 eval_ptr = std::make_unique<op_evaluator_impl<EvaluatorType>>();
             else
-                eval_ptr->append_evaluator(std::make_unique<op_evaluator_impl<EvaluatorType>>());
+                return eval_ptr->append_evaluator(std::make_unique<op_evaluator_impl<EvaluatorType>>());
+            return {};
+         }
+
+         /**
+          * @brief Delete an auxiliary evaluator
+          * @param handle The evaluator handle for the evaluator to delete, as returned by @ref register_evaluator
+          *
+          * Auxiliary evaluators, or the second and subsequent evaluators registered for a given operation type,
+          * can be deleted so that they no longer execute when operations of the relevant type are processed.
+          *
+          * If it may be desired to delete an auxiliary evaluator, retain the evaluator handle obtained when the
+          * evaluator was initially registered and when it is necessary to delete the evaluator, pass the handle
+          * to this function.
+          *
+          * The evaluator will have been deleted by the time this function returns.
+          */
+         void delete_evaluator(op_evaluator::evaluator_handle&& handle)
+         {
+            if ((uint64_t)handle.get_operation_type() < _operation_evaluators.size())
+               _operation_evaluators[handle.get_operation_type()]->delete_evaluator(std::move(handle));
          }
 
          //////////////////// db_balance.cpp ////////////////////

@@ -75,6 +75,10 @@ namespace graphene { namespace db {
          const index&  get_index()const { return get_index(T::space_id,T::type_id); }
          const index&  get_index(uint8_t space_id, uint8_t type_id)const;
          const index&  get_index(object_id_type id)const { return get_index(id.space(),id.type()); }
+         template<typename T>
+         const index* find_index()const { return find_index(T::space_id,T::type_id); }
+         const index* find_index(object_id_type id)const { return find_index(id.space(), id.type()); }
+         const index* find_index(uint8_t space_id, uint8_t type_id)const;
          /// @}
 
          const object& get_object( object_id_type id )const;
