@@ -12,6 +12,9 @@ set( CMAKE_CXX_STANDARD 14 )
 
 set( GRAPHENE_BUILD_DYNAMIC_LIBRARIES OFF CACHE BOOL
      "Whether to build dynamic libraries instead of static. Applies only to chain, db, protocol, net, and utilities" )
+if( GRAPHENE_BUILD_DYNAMIC_LIBRARIES )
+    set( CMAKE_POSITION_INDEPENDENT_CODE ON )
+endif()
 
 # http://stackoverflow.com/a/18369825
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
