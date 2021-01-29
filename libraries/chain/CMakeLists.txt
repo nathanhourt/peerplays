@@ -5,7 +5,8 @@ set_source_files_properties( "${CMAKE_CURRENT_BINARY_DIR}/include/graphene/chain
 
 add_dependencies( build_hardfork_hpp cat-parts )
 
-file(GLOB HEADERS "include/graphene/chain/*.hpp" "${CMAKE_CURRENT_BINARY_DIR}/include/graphene/chain/hardfork.hpp")
+file(GLOB HEADERS "include/graphene/chain/*.hpp")
+list(APPEND HEADERS "${CMAKE_CURRENT_BINARY_DIR}/include/graphene/chain/hardfork.hpp")
 
 file(GLOB CPP_FILES "*.cpp")
 
