@@ -3,6 +3,8 @@
 #include <graphene/peerplays_sidechain/bitcoin/bitcoin_transaction.hpp>
 #include <graphene/peerplays_sidechain/bitcoin/types.hpp>
 
+#include <endian.h>
+
 namespace graphene { namespace peerplays_sidechain { namespace bitcoin {
 
 inline void write_compact_size(bytes &vec, size_t size) {
