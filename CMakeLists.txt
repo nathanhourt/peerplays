@@ -59,7 +59,12 @@ LIST(APPEND BOOST_COMPONENTS thread
                              unit_test_framework
                              context
                              locale)
-SET( Boost_USE_STATIC_LIBS ON CACHE STRING "ON or OFF" )
+
+IF( ${GRAPHENE_BUILD_DYNAMIC_LIBRARIES} )
+  SET( Boost_USE_STATIC_LIBS OFF CACHE STRING "ON or OFF" )
+ELSE()
+  SET( Boost_USE_STATIC_LIBS ON CACHE STRING "ON or OFF" )
+ENDIF()
 
 IF( WIN32 )
   SET(BOOST_ROOT $ENV{BOOST_ROOT})
