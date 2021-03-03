@@ -21,6 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+
+#define BOOST_TEST_MODULE Peerplays Betting Tests
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 // disable auto_ptr deprecated warning, see https://svn.boost.org/trac10/ticket/11622
