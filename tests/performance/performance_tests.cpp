@@ -74,13 +74,11 @@ BOOST_AUTO_TEST_CASE( transfer_benchmark )
 
 //BOOST_AUTO_TEST_SUITE_END()
 
-//#define BOOST_TEST_MODULE "C++ Unit Tests for Graphene Blockchain Database"
-#include <cstdlib>
-#include <iostream>
-#include <boost/test/included/unit_test.hpp>
+struct GlobalInitializationFixture {
+    GlobalInitializationFixture() {
+        std::srand(time(NULL));
+        std::cout << "Random number generator seeded to " << time(NULL) << std::endl;
+    }
+};
+BOOST_TEST_GLOBAL_FIXTURE(GlobalInitializationFixture);
 
-boost::unit_test::test_suite* init_unit_test_suite(int argc, char* argv[]) {
-   std::srand(time(NULL));
-   std::cout << "Random number generator seeded to " << time(NULL) << std::endl;
-   return nullptr;
-}

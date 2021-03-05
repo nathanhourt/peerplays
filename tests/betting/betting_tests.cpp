@@ -2856,20 +2856,14 @@ BOOST_AUTO_TEST_CASE( wimbledon_2017_gentelmen_singles_final_test )
 
 BOOST_AUTO_TEST_SUITE_END()
 
+struct GlobalInitializationFixture {
+    GlobalInitializationFixture() {
+        std::srand(time(NULL));
+        std::cout << "Random number generator seeded to " << time(NULL) << std::endl;
 
-
-//#define BOOST_TEST_MODULE "C++ Unit Tests for Graphene Blockchain Database"
-#include <cstdlib>
-#include <iostream>
-#include <boost/test/included/unit_test.hpp>
-
-boost::unit_test::test_suite* init_unit_test_suite(int argc, char* argv[]) {
-    std::srand(time(NULL));
-    std::cout << "Random number generator seeded to " << time(NULL) << std::endl;
-
-    // betting operations don't take effect until HARDFORK 1000
-    GRAPHENE_TESTING_GENESIS_TIMESTAMP = HARDFORK_1000_TIME.sec_since_epoch() + 2;
-
-    return nullptr;
-}
+        // betting operations don't take effect until HARDFORK 1000
+        GRAPHENE_TESTING_GENESIS_TIMESTAMP = HARDFORK_1000_TIME.sec_since_epoch() + 2;
+    }
+};
+BOOST_TEST_GLOBAL_FIXTURE(GlobalInitializationFixture);
 
